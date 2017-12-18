@@ -3,6 +3,12 @@ from keras.layers import Flatten, Dense, Lambda, Convolution2D, Cropping2D
 from keras.layers.pooling import MaxPooling2D
 import matplotlib.pyplot as plt
 
+import pandas as pd
+import numpy as np
+import csv
+import os
+import sklearn
+
 # Ptah Variables
 IMAGE_FILE = './data/driving_log.csv'
 IMAGE_PATH = './data/'
@@ -43,8 +49,7 @@ def collectImages():
 	total_steering_angles.extend(steering_angles)
 	total_steering_angles.extend([x + steering_correction for x in steering_angles])
 	total_steering_angles.extend([x - steering_correction for x in steering_angles])
-	
-
+	return (total_image_paths, total_steering_angles)
 
 def preProcessLayers():
     """
@@ -101,7 +106,7 @@ def generator(samples, batch_size=32):
             yield sklearn.utils.shuffle(inputs, outputs)
 	
 # Reading images locations.
-all_image_paths, all_steering_angles = collect_images()
+all_image_paths, all_steering_angles = collectImages()
 print('Total Images: {}'.format( len(all_image_paths)))
 
 # Splitting samples and creating generators.
@@ -116,13 +121,13 @@ train_generator = generator(train_set, batch_size=32)
 validation_generator = generator(validation_set, batch_size=32)
 
 # Model creation
-model = nVidiaModel()
+model = nvidiaAuto()
 
 # Compiling and training the model
 model.compile(loss='mse', optimizer='adam')
 history_object = model.fit_generator(train_generator, samples_per_epoch= \
-                 len(train_samples), validation_data=validation_generator, \
-                 nb_val_samples=len(validation_samples), nb_epoch=3, verbose=1)
+                 len(train_set), validation_data=validation_generator, \
+                 nb_val_samples=len(validation_set), nb_epoch=3, verbose=1)
 
 model.save('model.h5')
 print(history_object.history.keys())
